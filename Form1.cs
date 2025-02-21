@@ -36,6 +36,6 @@ namespace actualizadorNET
             menu.Items.Add("Salir", null, (s,e)=> Application.Exit());
             notifyIcon.ContextMenuStrip = menu;
 
-        }
+        } 
     }
 }
