@@ -75,6 +75,12 @@ namespace actualizadorNET
             MostrarNotificacion("Configuracion cargada correctamente");
         }
 
+        private void GuardarConfiguracion()
+        {
+            string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText("config.json", json);
+            MostrarNotificacion("Configuracion guardada con exito");
+        }
         private void ConfigurarNotificacion()
         {
             notifyIcon = new NotifyIcon
@@ -307,21 +313,23 @@ namespace actualizadorNET
 
         private void VerificarCambios()
         {
-            string origen = servidorPath;
-            string destino = destinoPath;
+
             try
             {
-                if (!Directory.Exists(origen)) return;
-
-                foreach (string archivo in Directory.GetFiles(origen))
+                foreach (var carpeta in config.Carpetas)
                 {
-                    string archivoDestino = Path.Combine(destino, Path.GetFileName(archivo));
+                    if (!Directory.Exists(carpeta.Servidor)) continue;
 
-                    //si el archivo no existe en destino o el tamaño es diferente, copiarlo
-                    if (!File.Exists(archivoDestino) || new FileInfo(archivo).Length != new FileInfo(archivoDestino).Length)
+                    foreach (string archivo in Directory.GetFiles(carpeta.Servidor))
                     {
-                        File.Copy(archivo, archivoDestino, true);
-                        MostrarNotificacion($"Archivo actualizado: {archivo}");
+                        string archivoDestino = Path.Combine(carpeta.Destino, Path.GetFileName(archivo));
+
+                        if (!File.Exists(archivoDestino) || new FileInfo(archivo).Length != new FileInfo(archivoDestino).Length)
+                        {
+                            File.Copy(archivo, archivoDestino, true);
+                            MostrarNotificacion($"Archivo actualizado: {archivo}");
+                        }
+
                     }
                 }
             }
