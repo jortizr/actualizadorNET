@@ -93,8 +93,18 @@ namespace actualizadorNET
             ContextMenuStrip menu = new ContextMenuStrip();
             menu.Items.Add("Actualizar manualmente", null, (s,e) => ActualizarSoftware());
             menu.Items.Add("Salir", null, (s,e)=> CerrarAplicacion());
+            menu.Items.Add("Configuración", null, (s, e) => btnConfiguracion_Click(s, e));
             notifyIcon.ContextMenuStrip = menu;
         } 
+
+        private void btnConfiguracion_Click(object sender, EventArgs e)
+        {
+            FormConfiguracion formConfig = new FormConfiguracion(config);
+            if (formConfig.ShowDialog() == DialogResult.OK)
+            {
+                GuardarConfiguracion();
+            }
+        }
 
         private void CerrarAplicacion()
         {
