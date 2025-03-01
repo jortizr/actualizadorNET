@@ -19,8 +19,6 @@ namespace actualizadorNET
         private Configuracion config;
         private FileSystemWatcher? watcher;
         private System.Timers.Timer? timer;
-        private string servidorPath = @"\\08TEC02\update\";
-        private string destinoPath = @"C:\enviasql\program\";
         private NotifyIcon notifyIcon;
 
         private bool serverOnline = true;
@@ -29,6 +27,7 @@ namespace actualizadorNET
             CargarConfiguracion();
             notifyIcon = new NotifyIcon(); // Asegurar que se inicializa
             InitializeComponent();
+
             this.WindowState = FormWindowState.Minimized;
             this.ShowInTaskbar = false;
             this.FormBorderStyle = FormBorderStyle.FixedToolWindow;
@@ -46,7 +45,8 @@ namespace actualizadorNET
             timer.Start();
         }
 
-        private void CargarConfiguracion() { 
+        private void CargarConfiguracion()
+        {
             string configPath = "config.json";
             if (!File.Exists(configPath))
             {
@@ -54,12 +54,12 @@ namespace actualizadorNET
                 config = new Configuracion
                 {
                     IntervaloPing = 30000,
-                    Carpetas = new List<CarpetaConfig>
+                    Rutas = new List<CarpetaConfig>
                     {
                         new CarpetaConfig
                         {
-                            Servidor = servidorPath,
-                            Destino = destinoPath
+                            Servidor = "",
+                            Destino = ""
                         }
                     }
                 };
@@ -91,15 +91,15 @@ namespace actualizadorNET
             };
 
             ContextMenuStrip menu = new ContextMenuStrip();
-            menu.Items.Add("Actualizar manualmente", null, (s,e) => ActualizarSoftware());
-            menu.Items.Add("Salir", null, (s,e)=> CerrarAplicacion());
+            menu.Items.Add("Actualizar manualmente", null, (s, e) => ActualizarSoftware());
+            menu.Items.Add("Salir", null, (s, e) => CerrarAplicacion());
             menu.Items.Add("Configuración", null, (s, e) => btnConfiguracion_Click(s, e));
             notifyIcon.ContextMenuStrip = menu;
-        } 
+        }
 
         private void btnConfiguracion_Click(object sender, EventArgs e)
         {
-            FormConfiguracion formConfig = new FormConfiguracion(config);
+            FormConfiguracion formConfig = new FormConfiguracion();
             if (formConfig.ShowDialog() == DialogResult.OK)
             {
                 GuardarConfiguracion();
@@ -125,53 +125,67 @@ namespace actualizadorNET
                 notifyIcon.BalloonTipTitle = "Actualizador DTI";
                 notifyIcon.BalloonTipText = $"{mensaje}";
                 // La notificación dura 3 segundos
-                notifyIcon.ShowBalloonTip(3000); 
-                
+                notifyIcon.ShowBalloonTip(3000);
+
                 // Esperar un momento para asegurar que la notificación se muestra
                 System.Threading.Thread.Sleep(4000);
                 // Ocultar y eliminar el icono después de la notificación
                 notifyIcon.Visible = false;
             }
 
-                
-           
+
+
         }
 
         private void IniciarMonitoreo()
         {
-             try
-             {
-                 //verificar si la carpeta del servidor esta disponible
-                 if (!Directory.Exists(servidorPath))
-                 {
-                    MostrarNotificacion("Servidor no esta en línea. esperando reconexion...");
-                    serverOnline = false;
-                    return; // Salir del loop ya que el servidor no esta disponible
-                 }
-                 ConfigurarWatcher();
-                 serverOnline = true;
-                MostrarNotificacion("Monitoreo de actualizaciones iniciado");
+            try
+            {
+                bool algunServidorDisponible = false;
+                //verificar si la carpeta del servidor esta disponible
+                foreach (var ruta in config.Rutas)
+                {
+                    if (Directory.Exists(ruta.Servidor))
+                    {
+                        algunServidorDisponible = true;
+                    }
+                    else
+                    {
+                        MostrarNotificacion($"Servidor no disponible: {ruta.Servidor}. Esperando reconexión...");
+                    }
+                }
 
+                if (algunServidorDisponible)
+                {
+                    ConfigurarWatcher(); // Llamada sin parámetros
+                    MostrarNotificacion("Monitoreo de actualizaciones iniciado");
+                }
+
+                serverOnline = algunServidorDisponible;
             }
-             catch (Exception ex)
-             {
+            catch (Exception ex)
+            {
                 MostrarNotificacion($"Error en monitoreo: {ex.Message}");
-             }
+            }
         }
 
-        private void ConfigurarWatcher() 
-        { 
-            watcher = new FileSystemWatcher
+        private void ConfigurarWatcher()
+        {
+            foreach (var carpeta in config.Rutas)
             {
-                Path = servidorPath,
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
-                Filter = "*.*",
-                IncludeSubdirectories = true,
-                EnableRaisingEvents = true
-            };
+                FileSystemWatcher watcher = new FileSystemWatcher
+                {
+                    Path = carpeta.Servidor,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+                    Filter = "*.*",
+                    IncludeSubdirectories = true,
+                    EnableRaisingEvents = true
+                };
 
-            watcher.Changed += OnChanged;
-            watcher.Renamed += OnRenamed;
+                watcher.Changed += OnChanged;
+                watcher.Renamed += OnRenamed;
+            }
+
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e)
@@ -255,12 +269,16 @@ namespace actualizadorNET
                 //cierra el software si esta en ejecucion
                 killprocess("envia.exe");
                 //copiar todos los archivos y carpetas del servidor al destino
-                CopiarCarpetas(servidorPath, destinoPath);
+                foreach (var carpeta in config.Rutas)
+                {
+                    CopiarCarpetas(carpeta.Servidor, carpeta.Destino);
+                }
+
                 MostrarNotificacion("Actualización completada");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error en actualización: {ex.Message}");
+                MostrarNotificacion($"Error en actualización: {ex.Message}");
             }
         }
 
@@ -326,7 +344,7 @@ namespace actualizadorNET
 
             try
             {
-                foreach (var carpeta in config.Carpetas)
+                foreach (var carpeta in config.Rutas)
                 {
                     if (!Directory.Exists(carpeta.Servidor)) continue;
 
@@ -351,6 +369,11 @@ namespace actualizadorNET
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
             throw new NotImplementedException();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
