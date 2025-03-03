@@ -46,7 +46,7 @@ namespace actualizadorNET
             {
                 txtHost.Text = config.nameServer;
             }
-            
+
         }
 
 
@@ -117,6 +117,11 @@ namespace actualizadorNET
         }
 
         private void FormConfiguracion_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtDestino_TextChanged(object sender, EventArgs e)
         {
 
         }

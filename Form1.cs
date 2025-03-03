@@ -52,7 +52,7 @@ namespace actualizadorNET
          
             if (!File.Exists(configPath))
             {
-                MostrarNotificacion("Archivo de configuracion no encontrado, crea uno nuevo...");
+                MostrarNotificacion("1.Archivo de configuracion no encontrado, crea uno nuevo...");
                 config = new Configuracion
                 {
                     nameServer = "",
@@ -81,7 +81,7 @@ namespace actualizadorNET
             //validar configuracion de las rutas si es valida
             ValidarConfiguracion();
 
-            MostrarNotificacion("Configuracion cargada correctamente");
+            MostrarNotificacion("2.Configuracion cargada correctamente");
         }
 
         private void ValidarConfiguracion()
@@ -101,7 +101,7 @@ namespace actualizadorNET
         {
             string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText("config.json", json);
-            MostrarNotificacion("Configuracion guardada con exito");
+            MostrarNotificacion("3.Configuracion guardada con exito");
         }
         private void ConfigurarNotificacion()
         {
@@ -173,21 +173,22 @@ namespace actualizadorNET
                     }
                     else
                     {
-                        MostrarNotificacion($"Servidor no disponible: {ruta.Servidor}. Esperando reconexión...");
+                        MostrarNotificacion($"4. La ruta del Servidor no disponible: {ruta.Servidor}. " +
+                            $"Verifica las credenciales del servidor...");
                     }
                 }
 
                 if (algunServidorDisponible)
                 {
                     ConfigurarWatcher(); // Llamada sin parámetros
-                    MostrarNotificacion("Monitoreo de actualizaciones iniciado");
+                    MostrarNotificacion("5. Monitoreo de actualizaciones iniciado");
                 }
 
                 serverOnline = algunServidorDisponible;
             }
             catch (Exception ex)
             {
-                MostrarNotificacion($"Error en monitoreo: {ex.Message}");
+                MostrarNotificacion($"6. Error en monitoreo: {ex.Message}");
             }
         }
 
@@ -204,7 +205,7 @@ namespace actualizadorNET
             {
                 if (!Directory.Exists(carpeta.Servidor))
                 {
-                    MostrarNotificacion($"La carpeta {carpeta.Servidor} no existe.");
+                    MostrarNotificacion($"7. La carpeta {carpeta.Servidor} no existe.");
                     continue;
                 }
 
@@ -226,13 +227,13 @@ namespace actualizadorNET
 
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            MostrarNotificacion($"Cambio detectado en {e.FullPath}, iniciando actualizacion...");
+            MostrarNotificacion($"8. Cambio detectado en {e.FullPath}, iniciando actualizacion...");
             ActualizarSoftware();
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
-            MostrarNotificacion($"Archivo renombrado de {e.OldFullPath} a {e.FullPath}, iniciando actualizacion...");
+            MostrarNotificacion($"9. Archivo renombrado de {e.OldFullPath} a {e.FullPath}, iniciando actualizacion...");
             ActualizarSoftware();
         }
 
@@ -257,7 +258,7 @@ namespace actualizadorNET
                     {
                         if (!serverOnline)
                         {
-                            MostrarNotificacion("Servidor en línea, reiniciando monitoreo...");
+                            MostrarNotificacion("10. Servidor en línea, reiniciando monitoreo...");
                             serverOnline = true;
                             VerificarCambios();
                             //reiniciar monitoreo
@@ -268,7 +269,7 @@ namespace actualizadorNET
                     {
                         if (serverOnline)
                         {
-                            MostrarNotificacion("Servidor fuera de línea, monitoreo detenido...");
+                            MostrarNotificacion("11. Servidor fuera de línea, monitoreo detenido...");
                             DetenerMonitoreo();
                             serverOnline = false;
                         }
@@ -277,7 +278,7 @@ namespace actualizadorNET
             }
             catch (Exception ex)
             {
-                MostrarNotificacion($"Error al verificar conexión: {ex.Message}");
+                MostrarNotificacion($"12. Error al verificar conexión: {ex.Message}");
             }
         }
 
@@ -296,7 +297,7 @@ namespace actualizadorNET
             }
             catch (Exception ex)
             {
-                MostrarNotificacion($"Error al detener monitoreo: {ex.Message}");
+                MostrarNotificacion($"13. Error al detener monitoreo: {ex.Message}");
             }
         }
         private void ActualizarSoftware()
@@ -311,11 +312,11 @@ namespace actualizadorNET
                     CopiarCarpetas(carpeta.Servidor, carpeta.Destino);
                 }
 
-                MostrarNotificacion("Actualización completada");
+                MostrarNotificacion("14. Actualización completada");
             }
             catch (Exception ex)
             {
-                MostrarNotificacion($"Error en actualización: {ex.Message}");
+                MostrarNotificacion($"15. Error en actualización: {ex.Message}");
             }
         }
 
@@ -330,7 +331,7 @@ namespace actualizadorNET
                 }
                 catch (Exception ex)
                 {
-                    MostrarNotificacion($"Error al cerrar {nombreSoft}: {ex.Message}");
+                    MostrarNotificacion($"16. Error al cerrar {nombreSoft}: {ex.Message}");
                 }
             }
         }
@@ -353,11 +354,11 @@ namespace actualizadorNET
                     if (!File.Exists(destinoArchivo) || new FileInfo(archivo).Length != new FileInfo(destinoArchivo).Length)
                     {
                         File.Copy(archivo, destinoArchivo, true);
-                        MostrarNotificacion($"Archivo actualizado: {archivo}");
+                        MostrarNotificacion($"17. Archivo actualizado: {archivo}");
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine($"Archivo sin cambios: {archivo}");
+                        System.Diagnostics.Debug.WriteLine($"18. Archivo sin cambios: {archivo}");
 
                     }
                 }
@@ -372,7 +373,7 @@ namespace actualizadorNET
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error al copiar archivos: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"19. Error al copiar archivos: {ex.Message}");
             }
         }
 
@@ -392,7 +393,7 @@ namespace actualizadorNET
                         if (!File.Exists(archivoDestino) || new FileInfo(archivo).Length != new FileInfo(archivoDestino).Length)
                         {
                             File.Copy(archivo, archivoDestino, true);
-                            MostrarNotificacion($"Archivo actualizado: {archivo}");
+                            MostrarNotificacion($"20. Archivo actualizado: {archivo}");
                         }
 
                     }
@@ -400,7 +401,7 @@ namespace actualizadorNET
             }
             catch (Exception ex)
             {
-                MostrarNotificacion($"Error al verificar cambios: {ex.Message}");
+                MostrarNotificacion($"21. Error al verificar cambios: {ex.Message}");
             }
         }
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
