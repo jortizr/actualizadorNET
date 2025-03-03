@@ -20,6 +20,7 @@ namespace actualizadorNET
         private FileSystemWatcher? watcher;
         private System.Timers.Timer? timer;
         private NotifyIcon notifyIcon;
+        private List<FileSystemWatcher> watchers = new List<FileSystemWatcher>();
 
         private bool serverOnline = true;
         public Form1()
@@ -48,31 +49,52 @@ namespace actualizadorNET
         private void CargarConfiguracion()
         {
             string configPath = "config.json";
+         
             if (!File.Exists(configPath))
             {
                 MostrarNotificacion("Archivo de configuracion no encontrado, crea uno nuevo...");
                 config = new Configuracion
                 {
+                    nameServer = "",
                     IntervaloPing = 30000,
-                    Rutas = new List<CarpetaConfig>
-                    {
-                        new CarpetaConfig
-                        {
-                            Servidor = "",
-                            Destino = ""
-                        }
-                    }
+                    Rutas = new List<CarpetaConfig>()
                 };
-
                 File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+
+                MessageBox.Show("No existen rutas, por favor configura las rutas", 
+                    "Configuracion requerida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                //abrir formulario de configuracion
+                FormConfiguracion formConfig = new FormConfiguracion();
+                    if (formConfig.ShowDialog() == DialogResult.OK)
+                    {
+                        GuardarConfiguracion();
+                    }
             }
             else
             {
                 string json = File.ReadAllText(configPath);
+                System.Diagnostics.Debug.WriteLine(json);
                 config = JsonSerializer.Deserialize<Configuracion>(json) ?? new Configuracion();
             }
 
+            //validar configuracion de las rutas si es valida
+            ValidarConfiguracion();
+
             MostrarNotificacion("Configuracion cargada correctamente");
+        }
+
+        private void ValidarConfiguracion()
+        {
+            if (config.Rutas == null || config.Rutas.Count == 0)
+            {
+                MessageBox.Show("Debe configurar al menos un par de ruta", "Advertencia configuracion vacia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                //abre el formulario
+                FormConfiguracion formConfig = new FormConfiguracion();
+                formConfig.ShowDialog();
+            }
+
+
         }
 
         private void GuardarConfiguracion()
@@ -171,8 +193,21 @@ namespace actualizadorNET
 
         private void ConfigurarWatcher()
         {
+            //primero, liberar los watchers anteriores
+            foreach (var watcher in watchers)
+            {
+                watcher.Dispose();
+            }
+            watchers.Clear();
+
             foreach (var carpeta in config.Rutas)
             {
+                if (!Directory.Exists(carpeta.Servidor))
+                {
+                    MostrarNotificacion($"La carpeta {carpeta.Servidor} no existe.");
+                    continue;
+                }
+
                 FileSystemWatcher watcher = new FileSystemWatcher
                 {
                     Path = carpeta.Servidor,
@@ -184,6 +219,7 @@ namespace actualizadorNET
 
                 watcher.Changed += OnChanged;
                 watcher.Renamed += OnRenamed;
+                watchers.Add(watcher);
             }
 
         }
@@ -209,7 +245,7 @@ namespace actualizadorNET
                     PingReply? reply = null;
                     try
                     {
-                        reply = ping.Send("08TEC02", 5000);
+                        reply = ping.Send(config.nameServer, 5000);
                     }
                     catch (PingException)
                     {
@@ -249,13 +285,14 @@ namespace actualizadorNET
         {
             try
             {
-                if (watcher != null)
+                foreach (var watcher in watchers)
                 {
-                    //desactiva eventos
-                    watcher.EnableRaisingEvents = false;
-                    //libera recursos
-                    watcher = null;
+                        //desactiva eventos
+                        watcher.EnableRaisingEvents = false;
+                        //libera recursos
+                        watcher.Dispose();
                 }
+                watchers.Clear();
             }
             catch (Exception ex)
             {
@@ -316,11 +353,11 @@ namespace actualizadorNET
                     if (!File.Exists(destinoArchivo) || new FileInfo(archivo).Length != new FileInfo(destinoArchivo).Length)
                     {
                         File.Copy(archivo, destinoArchivo, true);
-                        Console.WriteLine($"Archivo actualizado: {archivo}");
+                        MostrarNotificacion($"Archivo actualizado: {archivo}");
                     }
                     else
                     {
-                        Console.WriteLine($"Archivo sin cambios: {archivo}");
+                        System.Diagnostics.Debug.WriteLine($"Archivo sin cambios: {archivo}");
 
                     }
                 }
@@ -335,7 +372,7 @@ namespace actualizadorNET
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al copiar archivos: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error al copiar archivos: {ex.Message}");
             }
         }
 

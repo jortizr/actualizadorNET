@@ -8,6 +8,7 @@ namespace actualizadorNET.Models
 {
     class Configuracion
     {
+        public string nameServer { get; set; } = string.Empty;
         public List<CarpetaConfig> Rutas { get; set; } = new List<CarpetaConfig>();
         public int IntervaloPing { get; set; } = 30000; //intervalo en milisegundos
     }

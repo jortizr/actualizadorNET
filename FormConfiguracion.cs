@@ -42,6 +42,11 @@ namespace actualizadorNET
         {
             dgvRutas.DataSource = null;
             dgvRutas.DataSource = config.Rutas;
+            if (!string.IsNullOrEmpty(config.nameServer))
+            {
+                txtHost.Text = config.nameServer;
+            }
+            
         }
 
 
@@ -58,15 +63,21 @@ namespace actualizadorNET
 
             config.Rutas.Add(new CarpetaConfig { Servidor = servidor, Destino = destino });
             ActualizarLista();
+            txtServidor.Text = string.Empty;
+            txtDestino.Text = string.Empty;
         }
 
         private void btnEliminar_Click(object sender, EventArgs e)
         {
-            if (dgvRutas.SelectedRows.Count > 0)
+            if (dgvRutas.SelectedCells.Count > 0)
             {
-                int index = dgvRutas.SelectedRows[0].Index;
-                config.Rutas.RemoveAt(index);
-                ActualizarLista();
+                int rowIndex = dgvRutas.SelectedCells[0].RowIndex;
+                //verificar el indice seleccionado
+                if (rowIndex >= 0 && rowIndex < config.Rutas.Count)
+                {
+                    config.Rutas.RemoveAt(rowIndex);
+                    ActualizarLista();
+                }
             }
             else
             {
@@ -86,6 +97,13 @@ namespace actualizadorNET
                 return;
             }
 
+            if (string.IsNullOrEmpty(txtHost.Text))
+            {
+                MessageBox.Show("Debe ingresar el nombre del servidor", "Campo del servidor vacio", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            config.nameServer = txtHost.Text.Trim();
             File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
             MessageBox.Show("Configuración guardada correctamente.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
             this.Close();
@@ -96,6 +114,11 @@ namespace actualizadorNET
 
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        private void FormConfiguracion_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
