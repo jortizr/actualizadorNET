@@ -181,7 +181,7 @@ namespace actualizadorNET
                 if (algunServidorDisponible)
                 {
                     ConfigurarWatcher(); // Llamada sin parámetros
-                    MostrarNotificacion("5. Monitoreo de actualizaciones iniciado");
+                    //MostrarNotificacion("5. Monitoreo de actualizaciones iniciado");
                 }
 
                 serverOnline = algunServidorDisponible;
@@ -354,7 +354,7 @@ namespace actualizadorNET
                     if (!File.Exists(destinoArchivo) || new FileInfo(archivo).Length != new FileInfo(destinoArchivo).Length)
                     {
                         File.Copy(archivo, destinoArchivo, true);
-                        MostrarNotificacion($"17. Archivo actualizado: {archivo}");
+                        //MostrarNotificacion($"17. Archivo actualizado: {archivo}");
                     }
                     else
                     {
