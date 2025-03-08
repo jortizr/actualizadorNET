@@ -21,6 +21,7 @@ namespace actualizadorNET
         private System.Timers.Timer? timer;
         private NotifyIcon notifyIcon;
         private List<FileSystemWatcher> watchers = new List<FileSystemWatcher>();
+        private const int INTERVALO_MAXIMO = 600000; //10 minutos
 
         private bool serverOnline = true;
         public Form1()
@@ -41,18 +42,37 @@ namespace actualizadorNET
             IniciarMonitoreo();
 
             //iniciar el temporizador para verificar la conexion
-            timer = new System.Timers.Timer(30000);
+            IniciarTemporizador(config.IntervaloPing);
+        }
+
+        /// <summary>
+        /// Inicia un temporizador para verificar la conexión con el servidor.
+        /// </summary>
+        /// <param name="intervalo"></param>
+
+        private void IniciarTemporizador(int intervalo)
+        {
+            if (timer != null)
+            {
+                timer.Stop();
+                timer.Dispose();
+            }
+
+            timer = new System.Timers.Timer(intervalo);
             timer.Elapsed += VerificarConexionServidor;
             timer.Start();
         }
 
+        /// <summary>
+        /// Carga la configuración del archivo config.json
+        /// </summary>
         private void CargarConfiguracion()
         {
             string configPath = "config.json";
          
             if (!File.Exists(configPath))
             {
-                MostrarNotificacion("1.Archivo de configuracion no encontrado, crea uno nuevo...");
+                MostrarNotificacion("configuracion no encontrada, crea uno nuevo...");
                 config = new Configuracion
                 {
                     nameServer = "",
@@ -81,9 +101,12 @@ namespace actualizadorNET
             //validar configuracion de las rutas si es valida
             ValidarConfiguracion();
 
-            MostrarNotificacion("2.Configuracion cargada correctamente");
+            MostrarNotificacion("Configuracion cargada correctamente");
         }
 
+        /// <summary>
+        /// Valida que la configuración tenga al menos una ruta configurada.
+        /// </summary>
         private void ValidarConfiguracion()
         {
             if (config.Rutas == null || config.Rutas.Count == 0)
@@ -97,12 +120,45 @@ namespace actualizadorNET
 
         }
 
+        /// <summary>
+        /// Guarda la configuración en el archivo config.json
+        /// </summary>
         private void GuardarConfiguracion()
         {
             string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText("config.json", json);
-            MostrarNotificacion("3.Configuracion guardada con exito");
+            MostrarNotificacion("Configuracion guardada con exito");
         }
+
+        /// <summary>
+        /// Intenta abrir la ruta del servidor en el Explorador de Windows.
+        /// </summary>
+        /// <param name="rutaServidor">Ruta UNC del servidor.</param>
+        public void AbrirRutaServidor(string rutaServidor)
+        {
+            try
+            {
+                MostrarNotificacion($"Abriendo la ruta del servidor: {rutaServidor}");
+                string rutaServ = @"\\" + rutaServidor.Trim();
+                //asegurar que la ruta tiene doble barra
+                if (!rutaServ.StartsWith(@"\\"))
+                {
+                    MostrarNotificacion("Ruta no válida para acceso a red.");
+                    return;
+                }
+
+                Process.Start("explorer.exe", $"{rutaServ}");
+                MostrarNotificacion($"Ejecutando acceso a: {rutaServ}");
+            }
+            catch (Exception ex)
+            {
+                MostrarNotificacion($"Error al abrir la ruta del servidor: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Configura la notificación en la barra de tareas.
+        /// </summary>
         private void ConfigurarNotificacion()
         {
             notifyIcon = new NotifyIcon
@@ -119,6 +175,11 @@ namespace actualizadorNET
             notifyIcon.ContextMenuStrip = menu;
         }
 
+        /// <summary>
+        /// Abre el formulario de configuración al dar clic en el menú de la barra de tareas.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnConfiguracion_Click(object sender, EventArgs e)
         {
             FormConfiguracion formConfig = new FormConfiguracion();
@@ -128,16 +189,11 @@ namespace actualizadorNET
             }
         }
 
-        private void CerrarAplicacion()
-        {
-            watcher?.Dispose();
-            watcher = null;
-            timer?.Stop();
-            timer = null;
-            notifyIcon.Visible = false;
-            Application.Exit();
-        }
 
+        /// <summary>
+        /// Muestra una notificación en la barra de tareas.
+        /// </summary>
+        /// <param name="mensaje"></param>
         private void MostrarNotificacion(string mensaje)
         {
             using (NotifyIcon notifyIcon = new NotifyIcon())
@@ -158,7 +214,9 @@ namespace actualizadorNET
 
 
         }
-
+        /// <summary>
+        /// Inicia el monitoreo de actualizaciones en las rutas configuradas.
+        /// </summary>
         private void IniciarMonitoreo()
         {
             try
@@ -175,6 +233,7 @@ namespace actualizadorNET
                     {
                         MostrarNotificacion($"4. La ruta del Servidor no disponible: {ruta.Servidor}. " +
                             $"Verifica las credenciales del servidor...");
+                        AbrirRutaServidor(config.nameServer);
                     }
                 }
 
@@ -191,7 +250,9 @@ namespace actualizadorNET
                 MostrarNotificacion($"6. Error en monitoreo: {ex.Message}");
             }
         }
-
+        /// <summary>
+        /// Configura los watchers para monitorear los cambios en las rutas configuradas del servidor.
+        /// </summary>
         private void ConfigurarWatcher()
         {
             //primero, liberar los watchers anteriores
@@ -224,18 +285,33 @@ namespace actualizadorNET
             }
 
         }
-
+        /// <summary>
+        /// Evento que se dispara cuando se detecta un cambio en el servidor.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            MostrarNotificacion($"8. Cambio detectado en {e.FullPath}, iniciando actualizacion...");
+            //MostrarNotificacion($"8. Cambio detectado en {e.FullPath}, iniciando actualizacion...");
             ActualizarSoftware();
         }
 
+        /// <summary>
+        /// Evento que se dispara cuando se renombra un archivo en el servidor.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
-            MostrarNotificacion($"9. Archivo renombrado de {e.OldFullPath} a {e.FullPath}, iniciando actualizacion...");
+            //MostrarNotificacion($"9. Archivo renombrado de {e.OldFullPath} a {e.FullPath}, iniciando actualizacion...");
             ActualizarSoftware();
         }
+
+        /// <summary>
+        /// Verifica la conexión con el servidor.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
 
         private void VerificarConexionServidor(object? sender, ElapsedEventArgs e)
         {
@@ -243,45 +319,54 @@ namespace actualizadorNET
             {
                 using (Ping ping = new Ping())
                 {
-                    PingReply? reply = null;
-                    try
-                    {
-                        reply = ping.Send(config.nameServer, 5000);
-                    }
-                    catch (PingException)
-                    {
-                        reply = null;
-                    }
+                    PingReply? reply = ping.Send(config.nameServer, 5000);
 
-
-                    if (reply != null && reply.Status == IPStatus.Success)
+                    if (reply.Status == IPStatus.Success)
                     {
-                        if (!serverOnline)
+                        //si el servidor esta en linea, se restablece el intervalo
+                        if (config.IntervaloPing != 30000)
                         {
-                            MostrarNotificacion("10. Servidor en línea, reiniciando monitoreo...");
-                            serverOnline = true;
-                            VerificarCambios();
-                            //reiniciar monitoreo
-                            IniciarMonitoreo();
+                            config.IntervaloPing = 30000;
+                            //reiniciamos el temporizador
+                            IniciarTemporizador(config.IntervaloPing);
                         }
+                        MostrarNotificacion("Servidor en linea");
+                        serverOnline = true;
+                        VerificarCambios();
+                        //reiniciar monitoreo
+                        IniciarMonitoreo();
                     }
                     else
                     {
-                        if (serverOnline)
-                        {
-                            MostrarNotificacion("11. Servidor fuera de línea, monitoreo detenido...");
-                            DetenerMonitoreo();
-                            serverOnline = false;
-                        }
+                        AjustarIntervalo();
                     }
+
                 }
             }
             catch (Exception ex)
             {
-                MostrarNotificacion($"12. Error al verificar conexión: {ex.Message}");
+                AjustarIntervalo();
             }
         }
 
+        /// <summary>
+        /// Aumenta progresivamente el intervalo de verificación si el servidor está caído.
+        /// </summary>
+        private void AjustarIntervalo()
+        {
+            if (config.IntervaloPing < INTERVALO_MAXIMO)
+            {
+                config.IntervaloPing *= 2; // Duplicar el tiempo
+                if (config.IntervaloPing > INTERVALO_MAXIMO)
+                    config.IntervaloPing = INTERVALO_MAXIMO;
+            }
+
+            IniciarTemporizador(config.IntervaloPing);
+        }
+
+        /// <summary>
+        /// Detiene el monitoreo de actualizaciones
+        /// </summary>
         private void DetenerMonitoreo()
         {
             try
@@ -300,6 +385,10 @@ namespace actualizadorNET
                 MostrarNotificacion($"13. Error al detener monitoreo: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Actualiza el software en el cliente con los archivos del servidor.
+        /// </summary>
         private void ActualizarSoftware()
         {
             try
@@ -320,6 +409,10 @@ namespace actualizadorNET
             }
         }
 
+        /// <summary>
+        /// Cierra un proceso en ejecución.
+        /// </summary>
+        /// <param name="nombreSoft"></param>
         private void killprocess(string nombreSoft)
         {
             foreach (var process in Process.GetProcessesByName(nombreSoft))
@@ -335,7 +428,11 @@ namespace actualizadorNET
                 }
             }
         }
-
+        /// <summary>
+        /// Copia los archivos y carpetas de origen a destino.
+        /// </summary>
+        /// <param name="origen"></param>
+        /// <param name="destino"></param>
         private void CopiarCarpetas(string origen, string destino)
         {
             try
@@ -349,6 +446,8 @@ namespace actualizadorNET
                 //copiar todos los archivos de origen a destino
                 foreach (string archivo in Directory.GetFiles(origen))
                 {
+                    System.Diagnostics.Debug.WriteLine($"contenido del foreach al copiar archivos: {archivo}");
+
                     string destinoArchivo = Path.Combine(destino, Path.GetFileName(archivo));
                     //comparar tamaño de archivo antes de copiar
                     if (!File.Exists(destinoArchivo) || new FileInfo(archivo).Length != new FileInfo(destinoArchivo).Length)
@@ -376,7 +475,9 @@ namespace actualizadorNET
                 System.Diagnostics.Debug.WriteLine($"19. Error al copiar archivos: {ex.Message}");
             }
         }
-
+        /// <summary>
+        /// verifica los cambios en el servidor y actualiza los archivos en el cliente.
+        /// </summary>
         private void VerificarCambios()
         {
 
@@ -390,7 +491,12 @@ namespace actualizadorNET
                     {
                         string archivoDestino = Path.Combine(carpeta.Destino, Path.GetFileName(archivo));
 
-                        if (!File.Exists(archivoDestino) || new FileInfo(archivo).Length != new FileInfo(archivoDestino).Length)
+                        FileInfo infoServidor = new FileInfo(archivo);
+                        FileInfo infoDestino = new FileInfo(archivoDestino);
+
+
+                        if (!File.Exists(archivoDestino) || infoServidor.Length != infoDestino.Length 
+                            || infoServidor.LastWriteTimeUtc > infoDestino.LastWriteTimeUtc)
                         {
                             File.Copy(archivo, archivoDestino, true);
                             MostrarNotificacion($"20. Archivo actualizado: {archivo}");
@@ -404,11 +510,30 @@ namespace actualizadorNET
                 MostrarNotificacion($"21. Error al verificar cambios: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Evento que se dispara cuando se detecta un cambio en el archivo de configuración.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <exception cref="NotImplementedException"></exception>
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Cierra la aplicación y libera los recursos.
+        /// </summary>
+        private void CerrarAplicacion()
+        {
+            watcher?.Dispose();
+            watcher = null;
+            timer?.Stop();
+            timer = null;
+            notifyIcon.Visible = false;
+            Application.Exit();
+        }
         private void Form1_Load(object sender, EventArgs e)
         {
 
