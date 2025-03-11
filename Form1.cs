@@ -75,6 +75,7 @@ namespace actualizadorNET
                 MostrarNotificacion("configuracion no encontrada, crea uno nuevo...");
                 config = new Configuracion
                 {
+                    IPServer = "",
                     nameServer = "",
                     IntervaloPing = 30000,
                     Rutas = new List<CarpetaConfig>()
@@ -94,7 +95,6 @@ namespace actualizadorNET
             else
             {
                 string json = File.ReadAllText(configPath);
-                System.Diagnostics.Debug.WriteLine(json);
                 config = JsonSerializer.Deserialize<Configuracion>(json) ?? new Configuracion();
             }
 
@@ -109,7 +109,8 @@ namespace actualizadorNET
         /// </summary>
         private void ValidarConfiguracion()
         {
-            if (config.Rutas == null || config.Rutas.Count == 0)
+            if (config.Rutas == null || config.Rutas.Count == 0 || 
+                config.IPServer == null || config.nameServer == null)
             {
                 MessageBox.Show("Debe configurar al menos un par de ruta", "Advertencia configuracion vacia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 //abre el formulario
@@ -130,31 +131,6 @@ namespace actualizadorNET
             MostrarNotificacion("Configuracion guardada con exito");
         }
 
-        /// <summary>
-        /// Intenta abrir la ruta del servidor en el Explorador de Windows.
-        /// </summary>
-        /// <param name="rutaServidor">Ruta UNC del servidor.</param>
-        public void AbrirRutaServidor(string rutaServidor)
-        {
-            try
-            {
-                MostrarNotificacion($"Abriendo la ruta del servidor: {rutaServidor}");
-                string rutaServ = @"\\" + rutaServidor.Trim();
-                //asegurar que la ruta tiene doble barra
-                if (!rutaServ.StartsWith(@"\\"))
-                {
-                    MostrarNotificacion("Ruta no válida para acceso a red.");
-                    return;
-                }
-
-                Process.Start("explorer.exe", $"{rutaServ}");
-                MostrarNotificacion($"Ejecutando acceso a: {rutaServ}");
-            }
-            catch (Exception ex)
-            {
-                MostrarNotificacion($"Error al abrir la ruta del servidor: {ex.Message}");
-            }
-        }
 
         /// <summary>
         /// Configura la notificación en la barra de tareas.
@@ -233,7 +209,6 @@ namespace actualizadorNET
                     {
                         MostrarNotificacion($"4. La ruta del Servidor no disponible: {ruta.Servidor}. " +
                             $"Verifica las credenciales del servidor...");
-                        AbrirRutaServidor(config.nameServer);
                     }
                 }
 

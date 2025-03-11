@@ -42,9 +42,10 @@ namespace actualizadorNET
         {
             dgvRutas.DataSource = null;
             dgvRutas.DataSource = config.Rutas;
-            if (!string.IsNullOrEmpty(config.nameServer))
+            if (!string.IsNullOrEmpty(config.nameServer) && !string.IsNullOrEmpty(config.IPServer))
             {
                 txtHost.Text = config.nameServer;
+                txtIP.Text = config.IPServer;
             }
 
         }

@@ -47,6 +47,8 @@
             btnCancelar = new Button();
             label4 = new Label();
             txtHost = new TextBox();
+            label5 = new Label();
+            txtIP = new TextBox();
             ((System.ComponentModel.ISupportInitialize)dgvRutas).BeginInit();
             ((System.ComponentModel.ISupportInitialize)carpetaConfigBindingSource).BeginInit();
             SuspendLayout();
@@ -219,14 +221,36 @@
             txtHost.Margin = new Padding(3, 4, 3, 4);
             txtHost.Name = "txtHost";
             txtHost.PlaceholderText = "0TEC0";
-            txtHost.Size = new Size(227, 27);
+            txtHost.Size = new Size(119, 27);
             txtHost.TabIndex = 13;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label5.Location = new Point(305, 65);
+            label5.Name = "label5";
+            label5.Size = new Size(35, 25);
+            label5.TabIndex = 14;
+            label5.Text = "IP:";
+            // 
+            // txtIP
+            // 
+            txtIP.ForeColor = SystemColors.InfoText;
+            txtIP.Location = new Point(337, 66);
+            txtIP.Margin = new Padding(3, 4, 3, 4);
+            txtIP.Name = "txtIP";
+            txtIP.PlaceholderText = "ip del servidor";
+            txtIP.Size = new Size(160, 27);
+            txtIP.TabIndex = 15;
             // 
             // FormConfiguracion
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(518, 488);
+            Controls.Add(txtIP);
+            Controls.Add(label5);
             Controls.Add(txtHost);
             Controls.Add(label4);
             Controls.Add(txtDestino);
@@ -271,5 +295,7 @@
         private DataGridViewTextBoxColumn destinoDataGridViewTextBoxColumn;
         private Label label4;
         private TextBox txtHost;
+        private Label label5;
+        private TextBox txtIP;
     }
 }
