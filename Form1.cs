@@ -26,10 +26,11 @@ namespace actualizadorNET
         private bool serverOnline = true;
         public Form1()
         {
-            CargarConfiguracion();
             notifyIcon = new NotifyIcon(); // Asegurar que se inicializa
             InitializeComponent();
-
+            CargarConfiguracion();
+            
+            
             this.WindowState = FormWindowState.Minimized;
             this.ShowInTaskbar = false;
             this.FormBorderStyle = FormBorderStyle.FixedToolWindow;
@@ -37,7 +38,6 @@ namespace actualizadorNET
 
             //verifica si hubo cambios en el servidor
             VerificarCambios();
-
             ConfigurarNotificacion();
             IniciarMonitoreo();
 

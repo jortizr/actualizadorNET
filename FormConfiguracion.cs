@@ -122,9 +122,5 @@ namespace actualizadorNET
 
         }
 
-        private void txtDestino_TextChanged(object sender, EventArgs e)
-        {
-
-        }
     }
 }
