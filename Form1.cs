@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.IO;
 using System.Windows.Forms;
 using System.Diagnostics;
@@ -46,10 +46,9 @@ namespace actualizadorNET
         }
 
         /// <summary>
-        /// Inicia un temporizador para verificar la conexiÛn con el servidor.
+        /// Inicia un temporizador para verificar la conexi√≥n con el servidor.
         /// </summary>
         /// <param name="intervalo"></param>
-
         private void IniciarTemporizador(int intervalo)
         {
             if (timer != null)
@@ -64,7 +63,45 @@ namespace actualizadorNET
         }
 
         /// <summary>
-        /// Carga la configuraciÛn del archivo config.json
+        /// Funcion para insertas las credenciales del servidor en windows para acceder a la red
+        /// </summary>
+        private void InsertarCredenciales(string servidor, string user, string password)
+        {
+            try
+            {
+                string comando = $"cmdkey /add:{servidor} /user:{user} /pass:{password}";
+
+                ProcessStartInfo psi = new ProcessStartInfo("cmd.exe")
+                {
+                    Arguments = $"/c {comando}",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                Process proceso = new Process { StartInfo = psi};
+                proceso.Start();
+                proceso.WaitForExit();
+
+                if (proceso.ExitCode == 0)
+                {
+                    MostrarNotificacion($"‚úÖ Credenciales guardadas para {servidor}");
+                }
+                else
+                {
+                    MostrarNotificacion("‚ö†Ô∏è Error al guardar las credenciales.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MostrarNotificacion($"Error al insertar credenciales: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Carga la configuraci√≥n del archivo config.json
         /// </summary>
         private void CargarConfiguracion()
         {
@@ -77,6 +114,8 @@ namespace actualizadorNET
                 {
                     IPServer = "",
                     nameServer = "",
+                    Username ="",
+                    Password = "",
                     IntervaloPing = 30000,
                     Rutas = new List<CarpetaConfig>()
                 };
@@ -105,10 +144,13 @@ namespace actualizadorNET
         }
 
         /// <summary>
-        /// Valida que la configuraciÛn tenga al menos una ruta configurada.
+        /// Valida que la configuraci√≥n tenga al menos una ruta configurada.
         /// </summary>
         private void ValidarConfiguracion()
         {
+            //verificar el archivo config.json si algun campo esta vacio
+            
+
             if (config.Rutas == null || config.Rutas.Count == 0 || 
                 config.IPServer == null || config.nameServer == null)
             {
@@ -122,7 +164,7 @@ namespace actualizadorNET
         }
 
         /// <summary>
-        /// Guarda la configuraciÛn en el archivo config.json
+        /// Guarda la configuraci√≥n en el archivo config.json
         /// </summary>
         private void GuardarConfiguracion()
         {
@@ -133,7 +175,7 @@ namespace actualizadorNET
 
 
         /// <summary>
-        /// Configura la notificaciÛn en la barra de tareas.
+        /// Configura la notificaci√≥n en la barra de tareas.
         /// </summary>
         private void ConfigurarNotificacion()
         {
@@ -147,12 +189,12 @@ namespace actualizadorNET
             ContextMenuStrip menu = new ContextMenuStrip();
             menu.Items.Add("Actualizar manualmente", null, (s, e) => ActualizarSoftware());
             menu.Items.Add("Salir", null, (s, e) => CerrarAplicacion());
-            menu.Items.Add("ConfiguraciÛn", null, (s, e) => btnConfiguracion_Click(s, e));
+            menu.Items.Add("Configuraci√≥n", null, (s, e) => btnConfiguracion_Click(s, e));
             notifyIcon.ContextMenuStrip = menu;
         }
 
         /// <summary>
-        /// Abre el formulario de configuraciÛn al dar clic en el men˙ de la barra de tareas.
+        /// Abre el formulario de configuraci√≥n al dar clic en el men√∫ de la barra de tareas.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -167,7 +209,7 @@ namespace actualizadorNET
 
 
         /// <summary>
-        /// Muestra una notificaciÛn en la barra de tareas.
+        /// Muestra una notificaci√≥n en la barra de tareas.
         /// </summary>
         /// <param name="mensaje"></param>
         private void MostrarNotificacion(string mensaje)
@@ -178,12 +220,12 @@ namespace actualizadorNET
                 notifyIcon.Visible = true;
                 notifyIcon.BalloonTipTitle = "Actualizador DTI";
                 notifyIcon.BalloonTipText = $"{mensaje}";
-                // La notificaciÛn dura 3 segundos
+                // La notificaci√≥n dura 3 segundos
                 notifyIcon.ShowBalloonTip(3000);
 
-                // Esperar un momento para asegurar que la notificaciÛn se muestra
+                // Esperar un momento para asegurar que la notificaci√≥n se muestra
                 System.Threading.Thread.Sleep(4000);
-                // Ocultar y eliminar el icono despuÈs de la notificaciÛn
+                // Ocultar y eliminar el icono despu√©s de la notificaci√≥n
                 notifyIcon.Visible = false;
             }
 
@@ -214,7 +256,7 @@ namespace actualizadorNET
 
                 if (algunServidorDisponible)
                 {
-                    ConfigurarWatcher(); // Llamada sin par·metros
+                    ConfigurarWatcher(); // Llamada sin par√°metros
                     //MostrarNotificacion("5. Monitoreo de actualizaciones iniciado");
                 }
 
@@ -283,11 +325,10 @@ namespace actualizadorNET
         }
 
         /// <summary>
-        /// Verifica la conexiÛn con el servidor.
+        /// Verifica la conexi√≥n con el servidor.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-
         private void VerificarConexionServidor(object? sender, ElapsedEventArgs e)
         {
             try
@@ -325,7 +366,7 @@ namespace actualizadorNET
         }
 
         /// <summary>
-        /// Aumenta progresivamente el intervalo de verificaciÛn si el servidor est· caÌdo.
+        /// Aumenta progresivamente el intervalo de verificaci√≥n si el servidor est√° ca√≠do.
         /// </summary>
         private void AjustarIntervalo()
         {
@@ -376,16 +417,16 @@ namespace actualizadorNET
                     CopiarCarpetas(carpeta.Servidor, carpeta.Destino);
                 }
 
-                MostrarNotificacion("14. ActualizaciÛn completada");
+                MostrarNotificacion("14. Actualizaci√≥n completada");
             }
             catch (Exception ex)
             {
-                MostrarNotificacion($"15. Error en actualizaciÛn: {ex.Message}");
+                MostrarNotificacion($"15. Error en actualizaci√≥n: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Cierra un proceso en ejecuciÛn.
+        /// Cierra un proceso en ejecuci√≥n.
         /// </summary>
         /// <param name="nombreSoft"></param>
         private void killprocess(string nombreSoft)
@@ -403,6 +444,7 @@ namespace actualizadorNET
                 }
             }
         }
+       
         /// <summary>
         /// Copia los archivos y carpetas de origen a destino.
         /// </summary>
@@ -424,7 +466,7 @@ namespace actualizadorNET
                     System.Diagnostics.Debug.WriteLine($"contenido del foreach al copiar archivos: {archivo}");
 
                     string destinoArchivo = Path.Combine(destino, Path.GetFileName(archivo));
-                    //comparar tamaÒo de archivo antes de copiar
+                    //comparar tama√±o de archivo antes de copiar
                     if (!File.Exists(destinoArchivo) || new FileInfo(archivo).Length != new FileInfo(destinoArchivo).Length)
                     {
                         File.Copy(archivo, destinoArchivo, true);
@@ -450,6 +492,7 @@ namespace actualizadorNET
                 System.Diagnostics.Debug.WriteLine($"19. Error al copiar archivos: {ex.Message}");
             }
         }
+        
         /// <summary>
         /// verifica los cambios en el servidor y actualiza los archivos en el cliente.
         /// </summary>
@@ -487,7 +530,7 @@ namespace actualizadorNET
         }
 
         /// <summary>
-        /// Evento que se dispara cuando se detecta un cambio en el archivo de configuraciÛn.
+        /// Evento que se dispara cuando se detecta un cambio en el archivo de configuraci√≥n.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -498,7 +541,7 @@ namespace actualizadorNET
         }
 
         /// <summary>
-        /// Cierra la aplicaciÛn y libera los recursos.
+        /// Cierra la aplicaci√≥n y libera los recursos.
         /// </summary>
         private void CerrarAplicacion()
         {

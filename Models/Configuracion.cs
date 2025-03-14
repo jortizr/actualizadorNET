@@ -8,6 +8,8 @@ namespace actualizadorNET.Models
 {
     class Configuracion
     {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
         public string IPServer { get; set; } = string.Empty;
         public string nameServer { get; set; } = string.Empty;
         public List<CarpetaConfig> Rutas { get; set; } = new List<CarpetaConfig>();

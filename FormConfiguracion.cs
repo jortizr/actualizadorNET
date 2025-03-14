@@ -36,6 +36,10 @@ namespace actualizadorNET
             }
             ActualizarLista();
             txtIntervalo.Text = config.IntervaloPing.ToString();
+            txtHost.Text = config.nameServer;
+            txtIP.Text = config.IPServer;
+            txtUsername.Text = config.Username;
+            txtPassword.Text = config.Password;
         }
 
         private void ActualizarLista()

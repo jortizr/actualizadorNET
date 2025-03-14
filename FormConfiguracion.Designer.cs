@@ -51,7 +51,7 @@
             txtIP = new TextBox();
             label6 = new Label();
             label7 = new Label();
-            txtUser = new TextBox();
+            txtUsername = new TextBox();
             txtPassword = new TextBox();
             ((System.ComponentModel.ISupportInitialize)dgvRutas).BeginInit();
             ((System.ComponentModel.ISupportInitialize)carpetaConfigBindingSource).BeginInit();
@@ -106,10 +106,10 @@
             // 
             // txtIntervalo
             // 
-            txtIntervalo.Location = new Point(295, 181);
+            txtIntervalo.Location = new Point(270, 181);
             txtIntervalo.Name = "txtIntervalo";
             txtIntervalo.PlaceholderText = "segundos";
-            txtIntervalo.Size = new Size(74, 23);
+            txtIntervalo.Size = new Size(89, 23);
             txtIntervalo.TabIndex = 2;
             // 
             // label1
@@ -257,13 +257,13 @@
             label7.TabIndex = 17;
             label7.Text = "Password:";
             // 
-            // txtUser
+            // txtUsername
             // 
-            txtUser.Location = new Point(132, 82);
-            txtUser.Name = "txtUser";
-            txtUser.PlaceholderText = "digita12";
-            txtUser.Size = new Size(112, 23);
-            txtUser.TabIndex = 18;
+            txtUsername.Location = new Point(132, 82);
+            txtUsername.Name = "txtUsername";
+            txtUsername.PlaceholderText = "digita12";
+            txtUsername.Size = new Size(112, 23);
+            txtUsername.TabIndex = 18;
             // 
             // txtPassword
             // 
@@ -281,7 +281,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(453, 402);
             Controls.Add(txtPassword);
-            Controls.Add(txtUser);
+            Controls.Add(txtUsername);
             Controls.Add(label7);
             Controls.Add(label6);
             Controls.Add(txtIP);
@@ -333,7 +333,7 @@
         private TextBox txtIP;
         private Label label6;
         private Label label7;
-        private TextBox txtUser;
+        private TextBox txtUsername;
         private TextBox txtPassword;
     }
 }
